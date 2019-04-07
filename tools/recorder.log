@@ -1,0 +1,82 @@
+[2019-04-07 19:11:12.013] [msgbag_recorder] [info] this is :5
+[2019-04-07 19:11:12.013] [msgbag_recorder] [info] this is :6
+[2019-04-07 19:11:12.013] [msgbag_recorder] [info] this is :7
+[2019-04-07 19:11:12.013] [msgbag_recorder] [info] this is :8
+[2019-04-07 19:11:12.013] [msgbag_recorder] [info] this is :9
+msgbag recorder start!
+this is :0
+this is :1
+this is :2
+this is :3
+this is :4
+this is :5
+this is :6
+this is :7
+this is :8
+this is :9
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[msgbag_recorder][04/07/19-19:36:13][2991][info]
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]msgbag recorder start!
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]this is :0
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]this is :1
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]this is :2
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]this is :3
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]this is :4
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]this is :5
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]this is :6
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]this is :7
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]this is :8
+[04/07/19-19:40:23][msgbag_recorder][thread-3630][info]this is :9
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]msgbag recorder start!
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]this is :0
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]this is :1
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]this is :2
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]this is :3
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]this is :4
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]this is :5
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]this is :6
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]this is :7
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]this is :8
+[msgbag_recorder][04/07/19-19:43:38][thread-4071][info][]this is :9
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] msgbag recorder start!][thread-4303]msgbag recorder start!
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] this is :0][thread-4303]this is :0
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] this is :1][thread-4303]this is :1
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] this is :2][thread-4303]this is :2
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] this is :3][thread-4303]this is :3
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] this is :4][thread-4303]this is :4
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] this is :5][thread-4303]this is :5
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] this is :6][thread-4303]this is :6
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] this is :7][thread-4303]this is :7
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] this is :8][thread-4303]this is :8
+[[2019-04-07 19:45:45.367] [msgbag_recorder] [info] this is :9][thread-4303]this is :9
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] msgbag recorder start!
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] this is :0
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] this is :1
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] this is :2
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] this is :3
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] this is :4
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] this is :5
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] this is :6
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] this is :7
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] this is :8
+[thread-4527][2019-04-07 19:47:15.951] [msgbag_recorder] [info] this is :9
+[thread-4861][2019-04-07 19:50:28.655] [msgbag_recorder] [info] msgbag recorder start!
+[thread-4861][2019-04-07 19:50:28.656] [msgbag_recorder] [info] this is :0
+[thread-4861][2019-04-07 19:50:28.656] [msgbag_recorder] [info] this is :1
+[thread-4861][2019-04-07 19:50:28.656] [msgbag_recorder] [info] this is :2
+[thread-4861][2019-04-07 19:50:28.656] [msgbag_recorder] [info] this is :3
+[thread-4861][2019-04-07 19:50:28.656] [msgbag_recorder] [info] this is :4
+[thread-4861][2019-04-07 19:50:28.656] [msgbag_recorder] [info] this is :5
+[thread-4861][2019-04-07 19:50:28.656] [msgbag_recorder] [info] this is :6
+[thread-4861][2019-04-07 19:50:28.656] [msgbag_recorder] [info] this is :7
+[thread-4861][2019-04-07 19:50:28.656] [msgbag_recorder] [info] this is :8
+[thread-4861][2019-04-07 19:50:28.656] [msgbag_recorder] [info] this is :9

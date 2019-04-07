@@ -1,0 +1,1 @@
+protoc --proto_path=./ --cpp_out=../src/pbmsg/ ./msgbag_msgs.proto
