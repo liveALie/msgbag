@@ -25,6 +25,8 @@ static struct option long_opts[] = {
     {"chunksize", required_argument, &lopt, 7},
     {"limit", required_argument, NULL, 'l'},
     {"node", required_argument, &lopt, 8},
+    {"min-space",required_argument,NULL,'L'},
+    {"topic",no_argument,&lopt,9},
     {0, 0, 0, 0}};
 
 void ShowUsage() {
@@ -104,7 +106,8 @@ void ParseOption(int argc, char **argv, RecorderOptions &opts) {
   char c = '\0';
   int opt_index = 0;
   while ((c = getopt_long(argc, argv, "haeqjx:o:O:b:l:", long_opts,
-                          &opt_index)) != -1) {
+                          &opt_index)) != -1)
+  {
     switch (c) {
     case 'h': {
       ShowUsage();
