@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bag.h"
-#include "common/msgbag_constants.h"
+#include "common/msgbag_types.h"
 #include "common/thread_pool.h"
 #include "common/time.h"
 #include "drive_timer.h"
@@ -23,6 +23,7 @@ namespace nullmax {
 namespace msgbag {
 
 class OutgoingMessage {
+
 public:
   OutgoingMessage(const std::string &topic, const std::string &msg)
       : time_(Time::Now()), topic_(topic), msg_(msg) {}
@@ -82,6 +83,7 @@ struct RecorderOptions {
 class MsgbagConf;
 
 class Recorder {
+
 public:
   Recorder(const RecorderOptions &options, MsgbagConf *conf);
 

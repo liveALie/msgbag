@@ -1,4 +1,4 @@
-#include "common/msgbag_constants.h"
+#include "common/msgbag_types.h"
 #include "log/logger.h"
 #include "msgbag_conf.h"
 #include "recorder.h"
@@ -315,20 +315,20 @@ void ParseOption(int argc, char **argv, RecorderOptions &opts) {
           exit(1);
         }
       } break;
-      //--chunksize
+      //--chunksize,not use.
       case 7: {
-        std::stringstream ss(::optarg);
-        int chnk_sz = -1;
-        if ((ss >> chnk_sz).fail()) {
-          std::cout << "--chunksize <SIZE>, SIZE should be number."
-                    << std::endl;
-          exit(1);
-        }
-        if (chnk_sz < 0) {
-          std::cerr << "Chunk size must be 0 or positive" << std::endl;
-          exit(1);
-        }
-        opts.chunk_size = 1024 * chnk_sz;
+        // std::stringstream ss(::optarg);
+        // int chnk_sz = -1;
+        // if ((ss >> chnk_sz).fail()) {
+        //   std::cout << "--chunksize <SIZE>, SIZE should be number."
+        //             << std::endl;
+        //   exit(1);
+        // }
+        // if (chnk_sz < 0) {
+        //   std::cerr << "Chunk size must be 0 or positive" << std::endl;
+        //   exit(1);
+        // }
+        // opts.chunk_size = 1024 * chnk_sz;
       } break;
       // node
       case 8: {

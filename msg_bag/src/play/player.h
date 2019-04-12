@@ -1,45 +1,109 @@
 #pragma once
-#include "common/msgbag_constants.h"
+#include "bag.h"
+#include "common/msgbag_types.h"
+#include "common/time.h"
+#include "publish_subscribe.h"
 #include <chrono>
 #include <string>
+#include <termios.h>
 #include <vector>
 
 namespace nullmax {
 namespace msgbag {
 struct PlayerOptions {
-  PlayerOptions(){};
+  PlayerOptions();
 
-  void check(){};
+  void Check();
 
-  std::string prefix;
-  bool quiet;
-  bool start_paused;
-  bool at_once;
-  bool bag_time;
-  double bag_time_frequency;
-  double time_scale;
-  int queue_size;
-  TimeDuration advertise_sleep;
-  bool try_future;
-  bool has_time;
-  bool loop;
-  float time;
-  bool has_duration;
-  float duration;
-  bool keep_alive;
-  bool wait_for_subscribers;
-  std::string rate_control_topic;
-  float rate_control_max_delay;
-  TimeDuration skip_empty;
+  std::string prefix_;
+  bool quiet_;
+  bool start_paused_;
+  bool at_once_;
+  bool bag_time_;
+  double bag_time_frequency_;
+  double time_scale_;
+  int queue_size_;
+  TimeDuration advertise_sleep_;
+  bool try_future_;
+  bool has_time_;
+  bool loop_;
+  float time_;
+  bool has_duration_;
+  float duration_;
+  bool keep_alive_;
+  bool wait_for_subscribers_;
+  std::string rate_control_topic_;
+  float rate_control_max_delay_;
+  TimeDuration skip_empty_;
 
-  std::vector<std::string> bags;
-  std::vector<std::string> topics;
-  std::vector<std::string> pause_topics;
+  std::vector<std::string> bags_;
+  std::vector<std::string> topics_;
+  std::vector<std::string> pause_topics_;
 };
+
+class MsgbagConf;
 
 class Player {
+
 public:
+  Player(const PlayerOptions &opts, MsgbagConf *conf);
+  ~Player();
   void Stop();
+  template <typename T>
+  void MsgHandler(const std::string &topic, const std::string &msg);
+  void Publish();
+
+private:
+  void Init();
+  void PauseCallback(const std::string &msg_str);
+  void SetupTerminal();
+
+private:
+  typedef std::shared_ptr<PublishSubscribe> PubSubPtr;
+  typedef std::map<std::string, PubSubPtr> PublisherMap;
+
+  PlayerOptions options_;
+
+  // ros::NodeHandle node_handle_;
+
+  // ros::ServiceServer pause_service_;
+
+  bool paused_;
+  bool delayed_;
+
+  bool pause_for_topics_;
+
+  bool pause_change_requested_;
+
+  bool requested_pause_state_;
+
+  // ros::Subscriber rate_control_sub_;
+  PubSubPtr subscriber_;
+  std::string err_msg_;
+
+  Time last_rate_control_;
+
+  Time paused_time_;
+
+  std::vector<std::shared_ptr<Bag>> bags_;
+  PublisherMap publishers_;
+
+  // Terminal
+  bool terminal_modified_;
+  termios orig_flags_;
+  fd_set stdin_fdset_;
+  int maxfd_;
+
+  // TimeTranslator time_translator_;
+  // TimePublisher time_publisher_;
+
+  Time start_time_;
+  TimeDuration bag_length_;
+  MsgbagConf *conf_;
 };
+
+template <typename T>
+void Player::MsgHandler(const std::string &topic, const std::string &msg) {}
+
 } // namespace msgbag
 } // namespace nullmax

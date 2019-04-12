@@ -1,5 +1,8 @@
 #include "bag.h"
+#include "common/msgbag_constants.h"
 #include "common/msgbag_exception.h"
+#include "common/util.h"
+#include "geometry_msgs.pb.h"
 #include "log/logger.h"
 
 namespace nullmax {
@@ -63,51 +66,54 @@ void Bag::OpenReadWrite(const std::string &filename) {
   //                           "is unsupported for appending");
 }
 
-void Bag::ReadVersion() {}
+void Bag::ReadVersion() {
+  std::string version_line;
+  getline(filestream_, version_line);
+  offset_ = filestream_.tellg();
+
+  int version_major, version_minor;
+  if (sscanf(version_line.c_str(), "#MSGBAG V%d.%d", &version_major,
+             &version_minor) != 2)
+    throw MsgbagException("Error reading version line");
+
+  version_ = version_major * 100 + version_minor;
+
+  LOG_DEBUG("Read VERSION: version={}", version_);
+}
 
 void Bag::WriteVersion() {
   std::string version = std::string("#MSGBAG V") + VERSION + std::string("\n");
 
   LOG_DEBUG("Writing VERSION {}: {}", (unsigned long long)offset_, version);
 
-  version_ = 200;
+  version_ = std::stof(VERSION) * 100 / 100;
 
   Write(version);
 }
 
 void Bag::WriteHeaderRecord() {
-  // connection_count_ = connections_.size();
-  // chunk_count_      = chunks_.size();
+  HeaderType header;
+  header[OP_FIELD_NAME] = HexToString(FILE_HEADER);
+  header[START_TIMESTAMP_FIELD_NAME] = std::to_string(start_timestamp_);
+  header[END_TIMESTAMP_FIELD_NAME] = std::to_string(end_timestamp_);
+  header[MSG_COUNT_FIELD_NAME] = std::to_string(msg_count_);
+  Buffer buffer(1024);
+  uint32_t header_len = WriteHeader(header, buffer);
+  uint32_t data_len = 0;
+  if (header_len < FILE_HEADER_LEN)
+    data_len = FILE_HEADER_LEN - header_len;
+  if (data_len > 0) {
+    std::string padding;
+    padding.resize(data_len, ' ');
+    buffer.append(padding);
+  }
+  LOG_DEBUG("buf readablebytes should be 1028,header_len:{},data_len:{}",
+            header_len, data_len);
+  LOG_DEBUG("write header record,buf readablebytes:{}", buffer.readableBytes());
 
-  // CONSOLE_BRIDGE_logDebug("Writing FILE_HEADER [%llu]: index_pos=%llu
-  // connection_count=%d chunk_count=%d",
-  //           (unsigned long long) file_.getOffset(), (unsigned long long)
-  //           index_data_pos_, connection_count_, chunk_count_);
-
-  // // Write file header record
-  // M_string header;
-  // header[OP_FIELD_NAME]               = toHeaderString(&OP_FILE_HEADER);
-  // header[INDEX_POS_FIELD_NAME]        = toHeaderString(&index_data_pos_);
-  // header[CONNECTION_COUNT_FIELD_NAME] = toHeaderString(&connection_count_);
-  // header[CHUNK_COUNT_FIELD_NAME]      = toHeaderString(&chunk_count_);
-  // encryptor_->addFieldsToFileHeader(header);
-
-  // boost::shared_array<uint8_t> header_buffer;
-  // uint32_t header_len;
-  // ros::Header::write(header, header_buffer, header_len);
-  // uint32_t data_len = 0;
-  // if (header_len < FILE_HEADER_LENGTH)
-  //     data_len = FILE_HEADER_LENGTH - header_len;
-  // write((char*) &header_len, 4);
-  // write((char*) header_buffer.get(), header_len);
-  // write((char*) &data_len, 4);
-
-  // // Pad the file header record out
-  // if (data_len > 0) {
-  //     string padding;
-  //     padding.resize(data_len, ' ');
-  //     write(padding);
-  // }
+  filestream_.write(buffer.peek(), buffer.readableBytes());
+  offset_ = filestream_.tellp();
+  LOG_DEBUG("write header record:{}", buffer.retrieveAllAsString());
 }
 
 void Bag::OpenWrite(const std::string &filename) {
@@ -123,9 +129,116 @@ void Bag::StartWriting() {
   WriteVersion();
   file_header_pos_ = offset_;
   WriteHeaderRecord();
+  index_data_pos_ = offset_;
+  start_timestamp_ = Time::Now().ToNano();
 }
 
-void Bag::OpenRead(const std::string &filename) {}
+void Bag::OpenRead(const std::string &filename) {
+  filestream_.open(filename, std::ios::in | std::ios::binary);
+  if (!filestream_)
+    throw MsgbagException(std::string("Bag::OpenRead file:")
+                              .append(filename)
+                              .append(std::string(" failed.")));
+  filename_ = filename;
+  UpdateFileInfo();
+  ReadVersion();
+  file_header_pos_ = offset_;
+  switch (version_) {
+  case 100: {
+    StartReadingVersion100();
+  } break;
+  default:
+    throw MsgbagException(std::string("unsuported bag file version:") +
+                          std::to_string(version_));
+  }
+}
+
+void Bag::StartReadingVersion100() {
+  ReadHeaderRecord();
+  filestream_.seekg(0, std::ios::end);
+  file_size_ = filestream_.tellg();
+
+  filestream_.seekg(index_data_pos_);
+  if (!filestream_) {
+    std::cout << "+++++++++++++++++++++++++++++++++bag file stream is null."
+              << std::endl;
+  }
+  while (offset_ < file_size_)
+    ReadTopicIndexRecord100();
+  filestream_.seekg(0, std::ios_base::beg);
+  if (!filestream_) {
+    std::cout << "bag file stream is null." << std::endl;
+  }
+}
+
+bool Bag::CheckEnoughDataToRead(size_t size) {
+  offset_ = filestream_.tellg();
+  bool ret = (file_size_ - offset_ > size);
+  if (!ret) {
+    offset_ = file_size_;
+    filestream_.seekg(0, std::ios_base::end);
+  }
+  return ret;
+}
+
+void Bag::ReadTopicIndexRecord100() {
+  size_t msg_size = 0;
+  long long time_stamp = 0;
+  offset_ = filestream_.tellg();
+  if (!CheckEnoughDataToRead(sizeof(size_t))) {
+    std::cout << "not enough data to read." << std::endl;
+    return;
+  }
+  filestream_.read((char *)&msg_size, sizeof(size_t));
+  offset_ = filestream_.tellg();
+  if (!CheckEnoughDataToRead(sizeof(long long))) {
+    std::cout << "not enough data to read." << std::endl;
+    return;
+  }
+  filestream_.read((char *)&time_stamp, sizeof(long long));
+  std::string topic;
+  getline(filestream_, topic);
+  Buffer buf(msg_size);
+  if (!CheckEnoughDataToRead(msg_size)) {
+    std::cout << "not enough data to read." << std::endl;
+    return;
+  }
+  filestream_.read(buf.beginWrite(), msg_size);
+  buf.hasWritten(msg_size);
+  offset_ = filestream_.tellg();
+  pb::geometry_msgs::PoseStamped pb_msg;
+  pb_msg.ParsePartialFromArray(buf.peek(), msg_size);
+  std::cout << "msg size:" << msg_size << ",timestamp:" << time_stamp
+            << ",topic:" << topic << ",msg body:" << pb_msg.DebugString();
+  fflush(stdout);
+}
+
+void Bag::ReadHeaderRecord() {
+  LOG_INFO("Bag::ReadHeaderRecord");
+  uint32_t total_size = FILE_HEADER_LEN + sizeof(uint32_t);
+  std::cout << "total size:" << total_size << std::endl;
+  Buffer buffer(total_size);
+  filestream_.read(buffer.beginWrite(), total_size);
+  buffer.hasWritten(total_size);
+  offset_ = filestream_.tellg();
+  index_data_pos_ = offset_;
+  std::cout << "index data pos:" << index_data_pos_ << std::endl;
+  std::cout << "buffer readablebytes should be " << 1028 << std::endl;
+  std::cout << "buffer readablebytes:" << buffer.readableBytes() << std::endl;
+  HeaderType file_header;
+  ReadHeader(file_header, buffer);
+  for (auto field : file_header) {
+    // LOG_DEBUG("read file header record:{}={}", field.first, field.second);
+    std::cout << "read file header record:" << field.first << "="
+              << field.second << std::endl;
+  }
+  LOG_DEBUG("read file header:{}", buffer.toStringPiece());
+  offset_ = filestream_.tellg();
+  // start_timestamp_ = std::stoll(file_header[START_TIMESTAMP_FIELD_NAME]);
+  // end_timestamp_ = std::stoll(file_header[END_TIMESTAMP_FIELD_NAME]);
+  // index_data_pos_ = std::stoi(file_header[INDEX_POS_FIELD_NAME]);
+  // msg_count_ = std::stoi(file_header[MSG_COUNT_FIELD_NAME]);
+}
 
 // void Bag::Seek(uint64_t pos, int origin) {
 //   // file_.seek(pos, origin);
@@ -137,6 +250,7 @@ void Bag::StopWriting() {
   filestream_.seekp(0, std::ios::end);
   index_data_pos_ = offset_;
   filestream_.seekp(file_header_pos_);
+  end_timestamp_ = Time::Now().ToNano();
   WriteHeaderRecord();
 }
 
@@ -160,6 +274,10 @@ void Bag::Init() {
   version_ = 0;
   compression_ = CompressionType::Uncompressed;
   chunk_threshold_ = 0;
+  index_data_pos_ = 0;
+  start_timestamp_ = 0;
+  end_timestamp_ = 0;
+  msg_count_ = 0;
 }
 
 void Bag::Close() {

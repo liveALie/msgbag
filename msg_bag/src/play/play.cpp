@@ -1,4 +1,4 @@
-#include "common/msgbag_constants.h"
+#include "common/msgbag_types.h"
 #include "geometry_msgs.pb.h"
 #include "log/logger.h"
 #include "msgbag_conf.h"
@@ -180,7 +180,7 @@ void ParseOptions(int argc, char **argv, struct PlayerOptions &opts) {
     }
   }
   while (::optind < argc) {
-    opts.bags.push_back(argv[optind++]);
+    opts.bags_.push_back(argv[optind++]);
   }
 }
 
@@ -211,40 +211,42 @@ int main(int argc, char *argv[]) {
   LOG_DEBUG("conf log_file:{}", conf.GetPlayerLogFile());
   LOG_DEBUG("conf max_logfile_size:{}", conf.GetLogfileMaxSize());
   LOG_DEBUG("conf max_logfile_num:{}", conf.GetMaxLogfileNum());
-
+  LOG_INFO("player start.");
   struct PlayerOptions opts;
   ParseOptions(argc, argv, opts);
-  if (opts.bags.empty()) {
-    LOG_ERROR("bags is empty.");
-    exit(1);
-  }
-  std::fstream fi(opts.bags[0], std::ios::in);
-  if (!fi) {
-    LOG_ERROR("file:{} open failed,because file not exist.");
-    exit(1);
-  }
-  std::string msg;
-  std::string version_info;
-  getline(fi, version_info);
-  LOG_DEBUG("version info:{}", version_info);
-
-  while (getline(fi, msg)) {
-    LOG_DEBUG("read line,msg:{},msg size:{}", msg, msg.size());
-    size_t pos = msg.find_first_of("\t");
-    LOG_DEBUG("fist \\t pos is {}", pos);
-    std::string msg_size_str = msg.substr(0, pos);
-    LOG_DEBUG("msg_size_str:{}", msg_size_str);
-    int msg_body_size = std::stoi(msg_size_str);
-    LOG_DEBUG("msg body size:{}", msg_body_size);
-    char *buf = new char[msg_body_size];
-    fi.read(buf, msg_body_size);
-    pb::geometry_msgs::PoseStamped pb_msg;
-    pb_msg.ParsePartialFromArray(buf, msg_body_size);
-    LOG_DEBUG("msg body:{}", pb_msg.DebugString());
-    getline(fi, msg);
-    LOG_DEBUG(msg);
-    delete[] buf;
-    break;
-  }
+  Player player(opts, &conf);
+  player.Publish();
+  LOG_INFO("player stopped.");
   return 0;
 }
+// int main(int argc, char **argv) {
+
+//   std::fstream fi(argv[1], std::ios::in);
+//   if (!fi) {
+//     std::cout << "file:{} open failed,because file not exist." << std::endl;
+//     exit(1);
+//   }
+//   std::string msg;
+//   std::string version_info;
+//   getline(fi, version_info);
+//   std::cout << "version:" << version_info << std::endl;
+//   auto index_data = fi.tellg();
+//   fi.seekg(0, std::ios::end);
+//   auto end = fi.tellg();
+//   fi.seekg(index_data);
+
+//   while (fi.tellg() < end) {
+//     size_t msg_size = 0;
+//     long long time_stamp = 0;
+//     fi.read((char *)&msg_size, sizeof(size_t));
+//     fi.read((char *)&time_stamp, sizeof(long long));
+//     std::string topic;
+//     getline(fi, topic);
+//     char *buf = new char[msg_size];
+//     fi.read(buf, msg_size);
+//     pb::geometry_msgs::PoseStamped pb_msg;
+//     pb_msg.ParsePartialFromArray(buf, msg_size);
+//     std::cout << "msg size:" << msg_size << ",timestamp:" << time_stamp
+//               << ",topic:" << topic << ",msg body:" << pb_msg.DebugString();
+//   }
+// }

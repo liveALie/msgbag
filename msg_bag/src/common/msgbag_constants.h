@@ -1,37 +1,22 @@
-#ifndef _MSGBAG_TYPES_H_
-#define _MSGBAG_TYPES_H_
+#ifndef _MSGBAG_CONSTANTS_H_
+#define _MSGBAG_CONSTANTS_H_
 
-#include <chrono>
-#include <common/buffer.h>
-#include <functional>
-#include <map>
-#include <memory>
+#include <string>
 
-namespace nullmax {
-namespace msgbag {
+namespace nullmax
+{
+namespace msgbag
+{
 
-class Recorder;
+const static unsigned char FILE_HEADER = 0x01;
 
-typedef std::function<void(std::string)> HandlerFunc;
+const static uint32_t FILE_HEADER_LEN = 1024;
 
-extern std::map<std::string, HandlerFunc> msg_handler_map;
-
-typedef std::function<void(void)> LoopFunc;
-
-typedef std::chrono::duration<double> TimeDuration;
-
-typedef std::shared_ptr<Buffer> Buffer_t;
-
-extern void InitHandlerMap(Recorder *recorder);
-
-enum CompressionType {
-  Uncompressed = 0,
-  BZ2 = 1,
-  LZ4 = 2,
-};
-
-enum BagMode { Write = 1, Read = 2, Append = 4 };
-
+const static std::string OP_FIELD_NAME = "op";
+const static std::string INDEX_POS_FIELD_NAME = "index_pos";
+const static std::string START_TIMESTAMP_FIELD_NAME = "start_time";
+const static std::string END_TIMESTAMP_FIELD_NAME = "end_time";
+const static std::string MSG_COUNT_FIELD_NAME = "msg_count";
 } // namespace msgbag
 } // namespace nullmax
 

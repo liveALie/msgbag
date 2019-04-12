@@ -1,11 +1,28 @@
 #pragma once
-#include "common/msgbag_constants.h"
+#include "common/msgbag_types.h"
+#include "common/time.h"
 #include <fstream>
 #include <string>
+
 namespace nullmax {
 namespace msgbag {
+
+struct MsgRecord {
+  std::string topic_;
+  Time arrived_time;
+  MsgbagBuffer serialized_msg;
+  size_t msg_size_;
+};
+
+using MsgRecordPtr = std::shared_ptr<MsgRecord>;
+
+using RecordsPtr = std::multimap<std::string, MsgRecordPtr>;
+
 const static std::string VERSION = "1.0";
 class Bag {
+  friend class Recorder;
+  friend class Player;
+
 public:
   Bag();
   Bag(const std::string &filename, uint32_t mode = BagMode::Read);
@@ -18,6 +35,14 @@ public:
   void Write(std::string const &s);
   void Write(char const *s, std::streamsize n);
   std::string GetFileName();
+
+  uint32_t getMajorVersion() const {
+    return version_ / 100;
+  } //!< Get the major-version of the open bag file
+
+  uint32_t getMinorVersion() const {
+    return version_ % 100;
+  } //!< Get the minor-version of the open bag file
 
 private:
   void Init();
@@ -32,6 +57,10 @@ private:
   void StopWriting();
   void WriteVersion();
   void WriteHeaderRecord();
+  void ReadHeaderRecord();
+  void StartReadingVersion100();
+  void ReadTopicIndexRecord100();
+  bool CheckEnoughDataToRead(size_t size);
 
 private:
   std::string filename_;
@@ -44,6 +73,9 @@ private:
   CompressionType compression_;
   uint32_t chunk_threshold_;
   uint64_t index_data_pos_;
+  long long start_timestamp_;
+  long long end_timestamp_;
+  uint32_t msg_count_;
 
   ////////以下待处理
   // mutable ChunkedFile file_;

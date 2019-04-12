@@ -1,6 +1,7 @@
 #include "recorder.h"
-#include "common/msgbag_constants.h"
 #include "common/msgbag_exception.h"
+#include "common/msgbag_types.h"
+#include "common/util.h"
 #include "drive_timer.h"
 #include "log/logger.h"
 #include "msgbag_conf.h"
@@ -39,8 +40,8 @@ void Recorder::DoTrigger() {
 void Recorder::DoSubscribe() {
   int index = 0;
   for (const auto &topic : options_.topics) {
-    auto handler = msg_handler_map.find(topic);
-    if (handler == msg_handler_map.end()) {
+    auto handler = recorder_handler_map.find(topic);
+    if (handler == recorder_handler_map.end()) {
       LOG_ERROR("msg of topic:{} has no handler.", topic);
       continue;
     }
@@ -59,21 +60,19 @@ void Recorder::DoWrite(const OutgoingMessage &out_msg) {
 
   if (CheckDuration(out_msg.time_))
     running_ = false;
-  std::string msg;
-  msg.append(std::to_string(out_msg.msg_.size()))
-      .append("\t")
-      .append(out_msg.time_.ToTimeStr())
-      .append("\t")
-      .append(out_msg.topic_)
-      .append("\t\n")
-      .append(out_msg.msg_);
-  LOG_DEBUG("to write msg:{}", msg);
-  // LOG_DEBUG("Recorder::DoWrite,buffer readablebytes:",
-  //           out_msg.buffer_->readableBytes());
+  size_t msg_size = out_msg.msg_.size();
+  long long time_stamp = out_msg.time_.ToNano();
   if (ScheduledCheckDisk() && CheckLogging()) {
     try {
       // bag_.Write(out_msg.buffer_->peek(), out_msg.buffer_->readableBytes());
-      bag_.Write(msg);
+      // bag_.Write(msg);
+
+      bag_.Write((const char *)&msg_size, sizeof(size_t));
+      bag_.Write((const char *)&time_stamp, sizeof(long long));
+      bag_.Write(out_msg.topic_);
+      bag_.Write("\n");
+      bag_.Write(out_msg.msg_.c_str(), msg_size);
+      ++bag_.msg_count_;
     } catch (const MsgbagException &e) {
       std::cout << "terminated exception:" << e.what() << std::endl;
       running_ = false;
@@ -286,7 +285,7 @@ void Recorder::DoRecordSingleThread() {
 
 void Recorder::InitRecordedTopics() {
 
-  for (const auto &handler : msg_handler_map) {
+  for (const auto &handler : recorder_handler_map) {
     options_.topics.push_back(handler.first);
   }
 }
@@ -322,8 +321,8 @@ void Recorder::EventLoop(const TimeDuration &duaration) {
 }
 
 int Recorder::Run() {
-  InitHandlerMap(this);
-  LOG_DEBUG("msg_handler_map size:{}", msg_handler_map.size());
+  InitRecorderHandlerMap(this);
+  LOG_DEBUG("recorder_handler_map size:{}", recorder_handler_map.size());
   if (options_.record_all) {
     InitRecordedTopics();
   }
