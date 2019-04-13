@@ -1,7 +1,7 @@
 #include "player.h"
 #include "log/logger.h"
-#include "msgbag_conf.h"
-#include "std_msgs.pb.h"
+// #include "msgbag_conf.h"
+// #include "std_msgs.pb.h"
 #include <iostream>
 
 namespace nullmax {
@@ -84,10 +84,10 @@ void Player::Publish() {
 }
 
 void Player::PauseCallback(const std::string &msg_str) {
-  pb::std_msgs::Bool msg;
-  msg.ParseFromString(msg_str);
-  pause_change_requested_ = (msg.data() != paused_);
-  requested_pause_state_ = msg.data();
+  // pb::std_msgs::Bool msg;
+  // msg.ParseFromString(msg_str);
+  // pause_change_requested_ = (msg.data() != paused_);
+  // requested_pause_state_ = msg.data();
 }
 
 void Player::SetupTerminal() {
@@ -110,11 +110,11 @@ void Player::SetupTerminal() {
 }
 
 void Player::Init() {
-  subscriber_ = std::make_shared<PublishSubscribe>(
-      conf_->GetIp(), conf_->GetPort(), conf_->GetBufferSize());
-  subscriber_->Subscribe(
-      "pause_playback",
-      std::bind(&Player::PauseCallback, this, std::placeholders::_1), err_msg_);
+  // subscriber_ = std::make_shared<PublishSubscribe>(
+  //     conf_->GetIp(), conf_->GetPort(), conf_->GetBufferSize());
+  // subscriber_->Subscribe(
+  //     "pause_playback",
+  //     std::bind(&Player::PauseCallback, this, std::placeholders::_1), err_msg_);
 }
 
 } // namespace msgbag

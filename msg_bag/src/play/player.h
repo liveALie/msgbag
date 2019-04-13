@@ -2,7 +2,7 @@
 #include "bag.h"
 #include "common/msgbag_types.h"
 #include "common/time.h"
-#include "publish_subscribe.h"
+// #include "publish_subscribe.h"
 #include <chrono>
 #include <string>
 #include <termios.h>
@@ -59,8 +59,8 @@ private:
   void SetupTerminal();
 
 private:
-  typedef std::shared_ptr<PublishSubscribe> PubSubPtr;
-  typedef std::map<std::string, PubSubPtr> PublisherMap;
+  // typedef std::shared_ptr<PublishSubscribe> PubSubPtr;
+  // typedef std::map<std::string, PubSubPtr> PublisherMap;
 
   PlayerOptions options_;
 
@@ -78,7 +78,7 @@ private:
   bool requested_pause_state_;
 
   // ros::Subscriber rate_control_sub_;
-  PubSubPtr subscriber_;
+  // PubSubPtr subscriber_;
   std::string err_msg_;
 
   Time last_rate_control_;
@@ -86,7 +86,7 @@ private:
   Time paused_time_;
 
   std::vector<std::shared_ptr<Bag>> bags_;
-  PublisherMap publishers_;
+  // PublisherMap publishers_;
 
   // Terminal
   bool terminal_modified_;

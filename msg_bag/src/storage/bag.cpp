@@ -2,7 +2,7 @@
 #include "common/msgbag_constants.h"
 #include "common/msgbag_exception.h"
 #include "common/util.h"
-#include "geometry_msgs.pb.h"
+// #include "geometry_msgs.pb.h"
 #include "log/logger.h"
 
 namespace nullmax {
@@ -206,10 +206,10 @@ void Bag::ReadTopicIndexRecord100() {
   filestream_.read(buf.beginWrite(), msg_size);
   buf.hasWritten(msg_size);
   offset_ = filestream_.tellg();
-  pb::geometry_msgs::PoseStamped pb_msg;
-  pb_msg.ParsePartialFromArray(buf.peek(), msg_size);
-  std::cout << "msg size:" << msg_size << ",timestamp:" << time_stamp
-            << ",topic:" << topic << ",msg body:" << pb_msg.DebugString();
+  // pb::geometry_msgs::PoseStamped pb_msg;
+  // pb_msg.ParsePartialFromArray(buf.peek(), msg_size);
+  // std::cout << "msg size:" << msg_size << ",timestamp:" << time_stamp
+  //           << ",topic:" << topic << ",msg body:" << pb_msg.DebugString();
   fflush(stdout);
 }
 

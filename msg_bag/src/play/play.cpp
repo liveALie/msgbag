@@ -1,5 +1,5 @@
 #include "common/msgbag_types.h"
-#include "geometry_msgs.pb.h"
+// #include "geometry_msgs.pb.h"
 #include "log/logger.h"
 #include "msgbag_conf.h"
 #include "player.h"
@@ -197,24 +197,25 @@ int main(int argc, char *argv[]) {
   signal(SIGINT, ProgExit);
   signal(SIGTERM, ProgExit);
 
-  MsgbagConf conf;
-  conf.LoadConf("msgbag.toml");
+  // MsgbagConf conf;
+  // conf.LoadConf("msgbag.toml");
 
   // INIT_LOGGER("msgbag_recorder", "recorder.log", 1024 * 512, 3);
-  Singleton<MyLogger>::GetInstance(
-      conf.GetPlayerLoggerName(), conf.GetPlayerLogFile(),
-      conf.GetLogfileMaxSize(), conf.GetMaxLogfileNum());
-  LOG_DEBUG("conf ip:{}", conf.GetIp());
-  LOG_DEBUG("conf port:{}", conf.GetPort());
-  LOG_DEBUG("conf buffer_size:{}", conf.GetBufferSize());
-  LOG_DEBUG("conf logger_name:{}", conf.GetPlayerLoggerName());
-  LOG_DEBUG("conf log_file:{}", conf.GetPlayerLogFile());
-  LOG_DEBUG("conf max_logfile_size:{}", conf.GetLogfileMaxSize());
-  LOG_DEBUG("conf max_logfile_num:{}", conf.GetMaxLogfileNum());
+  // Singleton<MyLogger>::GetInstance(
+  //     conf.GetPlayerLoggerName(), conf.GetPlayerLogFile(),
+  //     conf.GetLogfileMaxSize(), conf.GetMaxLogfileNum());
+  // LOG_DEBUG("conf ip:{}", conf.GetIp());
+  // LOG_DEBUG("conf port:{}", conf.GetPort());
+  // LOG_DEBUG("conf buffer_size:{}", conf.GetBufferSize());
+  // LOG_DEBUG("conf logger_name:{}", conf.GetPlayerLoggerName());
+  // LOG_DEBUG("conf log_file:{}", conf.GetPlayerLogFile());
+  // LOG_DEBUG("conf max_logfile_size:{}", conf.GetLogfileMaxSize());
+  // LOG_DEBUG("conf max_logfile_num:{}", conf.GetMaxLogfileNum());
+  Singleton<MyLogger>::GetInstance("player", "player.log", 1024000000, 3);
   LOG_INFO("player start.");
   struct PlayerOptions opts;
   ParseOptions(argc, argv, opts);
-  Player player(opts, &conf);
+  Player player(opts, NULL);
   player.Publish();
   LOG_INFO("player stopped.");
   return 0;
