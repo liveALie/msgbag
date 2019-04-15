@@ -2,6 +2,7 @@
 #include "log/logger.h"
 #include "msgbag_conf.h"
 #include "std_msgs.pb.h"
+#include "view.h"
 #include <iostream>
 
 namespace nullmax {
@@ -41,7 +42,7 @@ Player::Player(const PlayerOptions &opts, MsgbagConf *conf)
 
 Player::~Player() {}
 
-void Player::Stop() {}
+void Player::Stop() { timer_queue_.Stop(); }
 
 void Player::Publish() {
   options_.Check();
@@ -57,7 +58,7 @@ void Player::Publish() {
       exit(1);
     }
   }
-  SetupTerminal();
+  // SetupTerminal();
 
   if (!options_.prefix_.empty()) {
     LOG_INFO("using prefix {} for topics.", options_.prefix_);
@@ -66,20 +67,58 @@ void Player::Publish() {
   if (!options_.quiet_)
     puts(" ");
 
-  //   View full_view;
-  //   foreach (shared_ptr<Bag> bag, bags_)
-  //     full_view.addQuery(*bag);
+  View full_view;
+  for (const auto &bag : bags_) {
+    full_view.AddQuery(*bag);
+  }
 
-  // Time initial_time = full_view.getBeginTime();
+  Timestamp initial_time = full_view.GetBeginTime();
+  initial_time = AddTime(initial_time, options_.time_);
 
-  //   initial_time += ros::Duration(options_.time);
-  // TODO: MODIFY
-  Time initial_time = Time::Now();
+  Timestamp finish_time = detail::TIME_MAX;
+  if (options_.has_duration_)
+    finish_time = AddTime(initial_time, options_.duration_);
 
-  initial_time.AddDuration(TimeDuration(options_.time_));
-  Time finish_time = TIME_MAX;
-  if (options_.has_duration_) {
-    finish_time = initial_time + TimeDuration(options_.duration_);
+  View view;
+
+  TopicQuery topics(options_.topics_);
+  if (options_.topics_.empty()) {
+    for (const auto &bag : bags_) {
+      view.AddQuery(*bag, initial_time, finish_time);
+    }
+  } else {
+    for (const auto &bag : bags_) {
+      view.AddQuery(*bag, topics, initial_time, finish_time);
+    }
+  }
+
+  if (view.Size() == 0) {
+    std::cout << "No messages to play on specified topics.  Exiting."
+              << std::endl;
+    return;
+  }
+  std::cout << "start create timers." << std::endl;
+  while (true) {
+    Timestamp now = Timestamp::Now();
+    std::cout << "now:" << now.NanoSecondsSinceEpoch() << std::endl;
+    Timestamp initial_time = view.GetBeginTime();
+    std::cout << "initial time:" << initial_time.NanoSecondsSinceEpoch()
+              << std::endl;
+    double diff = TimeDifference(now, initial_time);
+    std::cout << "diff :" << diff << " nano seconds." << std::endl;
+    for (const auto &record : view.GetRecords()) {
+      Timestamp when = AddTime(record.first, diff);
+      std::cout << "topic:" << record.second->topic_
+                << ",when:" << when.NanoSecondsSinceEpoch() << std::endl;
+      timer_queue_.AddTimer(std::bind(&Player::DoPublish, this, record.second),
+                            when);
+    }
+    std::cout << "create timers over." << std::endl;
+    timer_queue_.Run();
+    if (!options_.loop_) {
+      std::cout << std::endl << "Done." << std::endl;
+      break;
+    }
   }
 }
 
@@ -110,11 +149,19 @@ void Player::SetupTerminal() {
 }
 
 void Player::Init() {
-  subscriber_ = std::make_shared<PublishSubscribe>(
+  publisher_ = std::make_shared<PublishSubscribe>(
       conf_->GetIp(), conf_->GetPort(), conf_->GetBufferSize());
-  subscriber_->Subscribe(
-      "pause_playback",
-      std::bind(&Player::PauseCallback, this, std::placeholders::_1), err_msg_);
+}
+
+void Player::DoPublish(MessageRecordPtr msg_record) {
+  // static std::string err_msg;
+  // static int msg_id;
+  // publisher_.Publish(msg_record->topic_,
+  //                    (char *)msg_record->serialized_msg_.c_str(),
+  //                    msg_record->serialized_msg_.size(), msg_id, err_msg);
+  Timestamp now = Timestamp::Now();
+  std::cout << "Player::DoPublish " << now.NanoSecondsSinceEpoch()
+            << " publish " << msg_record->topic_ << std::endl;
 }
 
 } // namespace msgbag

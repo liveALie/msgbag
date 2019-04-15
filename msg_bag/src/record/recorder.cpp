@@ -2,7 +2,6 @@
 #include "common/msgbag_exception.h"
 #include "common/msgbag_types.h"
 #include "common/util.h"
-#include "drive_timer.h"
 #include "log/logger.h"
 #include "msgbag_conf.h"
 #include <exception>
@@ -10,14 +9,6 @@
 
 namespace nullmax {
 namespace msgbag {
-
-// // OutgoingQueue
-
-// OutgoingQueue::OutgoingQueue(string const& _filename,
-// std::queue<OutgoingMessage>* _queue, Time _time) :
-//     filename(_filename), queue(_queue), time(_time)
-// {
-// }
 
 RecorderOptions::RecorderOptions()
     : trigger(false), record_all(false), regex(false), do_exclude(false),
@@ -31,7 +22,7 @@ RecorderOptions::RecorderOptions()
 Recorder::Recorder(const RecorderOptions &options, MsgbagConf *conf)
     : options_(options), num_subscribers_(0), exit_code_(0), split_count_(0),
       writing_enabled_(true), conf_(conf), err_msg_(""), running_(false),
-      thread_pool_(4), outmsg_queueu_(MAX_TASK_COUNT) {}
+      outmsg_queueu_(MAX_TASK_COUNT) {}
 
 void Recorder::DoTrigger() {
   LOG_INFO("Recorder::DoTrigger,reorder will exit.");
@@ -61,7 +52,7 @@ void Recorder::DoWrite(const OutgoingMessage &out_msg) {
   if (CheckDuration(out_msg.time_))
     running_ = false;
   size_t msg_size = out_msg.msg_.size();
-  long long time_stamp = out_msg.time_.ToNano();
+  long long time_stamp = out_msg.time_.NanoSecondsSinceEpoch();
   if (ScheduledCheckDisk() && CheckLogging()) {
     try {
       // bag_.Write(out_msg.buffer_->peek(), out_msg.buffer_->readableBytes());
@@ -117,7 +108,7 @@ void Recorder::UpdateFilename() {
   if (prefix.length() > 0)
     parts.push_back(prefix);
   if (options_.append_date)
-    parts.push_back(Time::Now().ToStr());
+    parts.push_back(Timestamp::Now().ToFormattedString());
   if (options_.split)
     parts.push_back(std::to_string(split_count_));
 
@@ -200,16 +191,17 @@ void Recorder::CheckNumSplits() {
   }
 }
 
-bool Recorder::CheckDuration(const Time &time) {
+bool Recorder::CheckDuration(const Timestamp &time) {
   LOG_DEBUG("Recorder::CheckDuration");
   if (options_.max_duration > TimeDuration(0)) {
-    if ((time - start_time_) > options_.max_duration) {
+    if (TimeDifference(time, start_time_) > options_.max_duration.count()) {
       if (options_.split) {
-        while (start_time_ + options_.max_duration < time) {
+        while (AddTime(start_time_, options_.max_duration.count())  < time) {
           StopWriting();
           split_count_++;
           CheckNumSplits();
-          start_time_.AddDuration(options_.max_duration);
+          // start_time_.AddDuration(options_.max_duration);
+          start_time_ = AddTime(start_time_,options_.max_duration.count());
           StartWriting();
         }
       } else {
@@ -223,9 +215,10 @@ bool Recorder::CheckDuration(const Time &time) {
 
 bool Recorder::ScheduledCheckDisk() {
   std::lock_guard<std::mutex> lck(check_disk_mutex_);
-  if (Time::Now() < check_disk_next_)
+  if (Timestamp::Now() < check_disk_next_)
     return true;
-  check_disk_next_.AddDuration(TimeDuration(2.0));
+  // check_disk_next_.AddDuration(TimeDuration(2.0));
+  check_disk_next_ = AddTime(check_disk_next_,2.0);
   return CheckDisk();
 }
 
@@ -233,9 +226,10 @@ bool Recorder::CheckLogging() {
   if (writing_enabled_)
     return true;
 
-  Time now = Time::Now();
+  Timestamp now = Timestamp::Now();
   if (!(now < warn_next_)) {
-    warn_next_ = now.AddDuration(TimeDuration(5.0));
+    // warn_next_ = now.AddDuration(TimeDuration(5.0));
+    warn_next_ = AddTime(now,5.0);
     LOG_WARN("Not logging message because logging disabled.  Most likely cause "
              "is a full disk.");
   }
@@ -245,7 +239,7 @@ bool Recorder::CheckLogging() {
 void Recorder::DoRecordSingleThread() {
   LOG_INFO("Recorder::DoRecordSingleThread");
   StartWriting();
-  warn_next_ = Time::Now();
+  warn_next_ = Timestamp::Now();
   CheckDisk();
   // TODO:
   // try
@@ -259,7 +253,8 @@ void Recorder::DoRecordSingleThread() {
   //       stopWriting();
   //       return;
   //   }
-  check_disk_next_ = Time::Now().AddDuration(TimeDuration(20));
+  // check_disk_next_ = Timestamp::Now().AddDuration(TimeDuration(20));
+  check_disk_next_ = AddTime(Timestamp::Now(),2.0);
   // while (running_) {
   //   std::list<Task> list;
   //   queue_.Take(list);
@@ -357,9 +352,9 @@ int Recorder::Run() {
     // TODO: create a ipc pubsub to publish string msg.
   }
 
-  last_buffer_warn_ = nullmax::msgbag::Time::Now();
+  last_buffer_warn_ = nullmax::msgbag::Timestamp::Now();
   running_ = true;
-  start_time_ = nullmax::msgbag::Time::Now();
+  start_time_ = nullmax::msgbag::Timestamp::Now();
   record_thread_ = std::make_shared<std::thread>(
       std::thread(std::bind(&Recorder::DoRecordSingleThread, this)));
   DoSubscribe();
@@ -383,9 +378,9 @@ void Recorder::Stop() {
   LOG_INFO("Recorder stop.");
   running_ = false;
   outmsg_queueu_.Stop();
-  StopWriting();
   record_thread_->join();
-  thread_pool_.Stop();
+  StopWriting();
+  // thread_pool_.Stop();
 }
 } // namespace msgbag
 } // namespace nullmax

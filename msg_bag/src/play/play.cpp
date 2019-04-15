@@ -10,7 +10,7 @@
 #include <sstream>
 
 using namespace nullmax::msgbag;
-Player *player = nullptr;
+Player *player_ptr = nullptr;
 
 static int lopt = -1;
 static struct option long_opts[] = {
@@ -186,8 +186,8 @@ void ParseOptions(int argc, char **argv, struct PlayerOptions &opts) {
 
 void ProgExit(int signo) {
   LOG_CRITICAL("program recv signal [{}],to exit.", signo);
-  if (player) {
-    // recorder_ptr->Stop();
+  if (player_ptr) {
+    player_ptr->Stop();
   }
 }
 
@@ -215,6 +215,8 @@ int main(int argc, char *argv[]) {
   struct PlayerOptions opts;
   ParseOptions(argc, argv, opts);
   Player player(opts, &conf);
+
+  player_ptr = &player;
   player.Publish();
   LOG_INFO("player stopped.");
   return 0;

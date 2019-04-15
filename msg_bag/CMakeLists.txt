@@ -26,6 +26,7 @@ add_executable(record
     src/common/thread_pool.cpp
     src/storage/bag.cpp
     src/common/buffer.cpp
+    src/common/timestamp.cpp
     ${PROTOCOL_SRC})
 IF($ENV{CROSS_COMPILING_TYPE} MATCHES "qnx")
     TARGET_LINK_LIBRARIES(record libshmmq.a libprotobuf.a -lsocket)
@@ -41,6 +42,12 @@ add_executable(play
     src/storage/bag.cpp
     src/common/buffer.cpp
     src/common/util.cpp
+    src/common/timestamp.cpp
+    src/common/timer.cpp
+    src/common/event_loop.cpp
+    src/common/timer_queue.cpp
+    src/storage/view.cpp
+    src/storage/query.cpp
     ${PROTOCOL_SRC}
     )
 IF($ENV{CROSS_COMPILING_TYPE} MATCHES "qnx")

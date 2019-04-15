@@ -3,7 +3,7 @@
 #include "bag.h"
 #include "common/msgbag_types.h"
 #include "common/thread_pool.h"
-#include "common/time.h"
+#include "common/timestamp.h"
 #include "drive_timer.h"
 #include "log/logger.h"
 #include "publish_subscribe.h"
@@ -26,27 +26,27 @@ class OutgoingMessage {
 
 public:
   OutgoingMessage(const std::string &topic, const std::string &msg)
-      : time_(Time::Now()), topic_(topic), msg_(msg) {}
+      : time_(Timestamp::Now()), topic_(topic), msg_(msg) {}
   // topic_tools::ShapeShifter::ConstPtr _msg, boost::shared_ptr<ros::M_string>
-  // _connection_header, ros::Time _time);
-  nullmax::msgbag::Time time_;
+  // _connection_header, ros::Timestamp _time);
+  nullmax::msgbag::Timestamp time_;
   std::string topic_;
   std::string msg_;
   // unsigned int size_;
   // Buffer_t buffer_;
   // topic_tools::ShapeShifter::ConstPtr msg;
   // std::shared_ptr<ros::M_string>    connection_header;
-  // ros::Time                           time;
+  // ros::Timestamp                           time;
 };
 
 class OutgoingQueue {
 public:
   // OutgoingQueue(std::string const& _filename, std::queue<OutgoingMessage>*
-  // _queue, ros::Time _time);
+  // _queue, ros::Timestamp _time);
 
   std::string filename;
   std::queue<OutgoingMessage> *queue;
-  // ros::Time                    time;
+  // ros::Timestamp                    time;
 };
 
 struct RecorderOptions {
@@ -112,7 +112,7 @@ private:
   void UpdateFilename();
   bool CheckDisk();
   bool CheckSize();
-  bool CheckDuration(const Time &time);
+  bool CheckDuration(const Timestamp &time);
   bool ScheduledCheckDisk();
   bool CheckLogging();
   void CheckNumSplits();
@@ -137,7 +137,7 @@ private:
   //   void DoRecord();
   //   void CheckNumSplits();
   //   bool CheckSize();
-  //   bool CheckDuration(const nullmax::msgbag::Time &);
+  //   bool CheckDuration(const nullmax::msgbag::Timestamp &);
   //   void DoRecordSnapshotter();
   //   // void DoCheckMaster(ros::TimerEvent const &e, ros::NodeHandle
   //   &node_handle);
@@ -174,14 +174,14 @@ private:
   std::queue<OutgoingQueue>
       queue_queue_; //!< queue of queues to be used by the snapshot recorders
 
-  nullmax::msgbag::Time last_buffer_warn_;
+  nullmax::msgbag::Timestamp last_buffer_warn_;
 
-  nullmax::msgbag::Time start_time_;
+  nullmax::msgbag::Timestamp start_time_;
 
   bool writing_enabled_;
   std::mutex check_disk_mutex_;
-  nullmax::msgbag::Time check_disk_next_;
-  nullmax::msgbag::Time warn_next_;
+  nullmax::msgbag::Timestamp check_disk_next_;
+  nullmax::msgbag::Timestamp warn_next_;
   MsgbagConf *conf_;
 
   // ros::Publisher pub_begin_write;
@@ -189,7 +189,7 @@ private:
   std::string err_msg_;
 
   std::atomic<bool> running_;
-  ThreadPool thread_pool_;
+  // ThreadPool thread_pool_;
   SyncQueue<OutgoingMessage> outmsg_queueu_;
   std::shared_ptr<std::thread> record_thread_;
 };

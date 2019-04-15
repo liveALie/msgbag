@@ -130,7 +130,7 @@ void Bag::StartWriting() {
   file_header_pos_ = offset_;
   WriteHeaderRecord();
   index_data_pos_ = offset_;
-  start_timestamp_ = Time::Now().ToNano();
+  start_timestamp_ = Timestamp::Now().NanoSecondsSinceEpoch();
 }
 
 void Bag::OpenRead(const std::string &filename) {
@@ -206,11 +206,15 @@ void Bag::ReadTopicIndexRecord100() {
   filestream_.read(buf.beginWrite(), msg_size);
   buf.hasWritten(msg_size);
   offset_ = filestream_.tellg();
-  pb::geometry_msgs::PoseStamped pb_msg;
-  pb_msg.ParsePartialFromArray(buf.peek(), msg_size);
-  std::cout << "msg size:" << msg_size << ",timestamp:" << time_stamp
-            << ",topic:" << topic << ",msg body:" << pb_msg.DebugString();
-  fflush(stdout);
+  std::string msg(buf.peek(), msg_size);
+  MessageRecordPtr msg_record =
+      std::make_shared<MessageRecord>(time_stamp, topic, msg);
+  records_.insert({Timestamp(time_stamp), msg_record});
+  // pb::geometry_msgs::PoseStamped pb_msg;
+  // pb_msg.ParsePartialFromArray(buf.peek(), msg_size);
+  // std::cout << "msg size:" << msg_size << ",timestamp:" << time_stamp
+  //           << ",topic:" << topic << ",msg body:" << pb_msg.DebugString();
+  // fflush(stdout);
 }
 
 void Bag::ReadHeaderRecord() {
@@ -250,8 +254,10 @@ void Bag::StopWriting() {
   filestream_.seekp(0, std::ios::end);
   index_data_pos_ = offset_;
   filestream_.seekp(file_header_pos_);
-  end_timestamp_ = Time::Now().ToNano();
+  end_timestamp_ = Timestamp::Now().NanoSecondsSinceEpoch();
   WriteHeaderRecord();
+  filestream_.flush();
+  LOG_INFO("bag stopwritting.");
 }
 
 void Bag::UpdateFileInfo() {

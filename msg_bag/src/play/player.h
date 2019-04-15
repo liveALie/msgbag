@@ -1,7 +1,8 @@
 #pragma once
 #include "bag.h"
 #include "common/msgbag_types.h"
-#include "common/time.h"
+#include "common/timestamp.h"
+#include "common/timer_queue.h"
 #include "publish_subscribe.h"
 #include <chrono>
 #include <string>
@@ -52,6 +53,7 @@ public:
   template <typename T>
   void MsgHandler(const std::string &topic, const std::string &msg);
   void Publish();
+  void DoPublish(MessageRecordPtr msg_record);
 
 private:
   void Init();
@@ -81,12 +83,13 @@ private:
   PubSubPtr subscriber_;
   std::string err_msg_;
 
-  Time last_rate_control_;
+  Timestamp last_rate_control_;
 
-  Time paused_time_;
+  Timestamp paused_time_;
 
   std::vector<std::shared_ptr<Bag>> bags_;
-  PublisherMap publishers_;
+  // PublisherMap publishers_;
+  PubSubPtr publisher_;
 
   // Terminal
   bool terminal_modified_;
@@ -97,9 +100,10 @@ private:
   // TimeTranslator time_translator_;
   // TimePublisher time_publisher_;
 
-  Time start_time_;
+  Timestamp start_time_;
   TimeDuration bag_length_;
   MsgbagConf *conf_;
+  TimerQueue timer_queue_;
 };
 
 template <typename T>

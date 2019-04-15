@@ -13,6 +13,9 @@
 #include "twist_controller_msgs.pb.h"
 #include "world_model_msgs.pb.h"
 
+#include "timestamp.h"
+#include <sys/timerfd.h>
+
 namespace nullmax {
 namespace msgbag {
 std::map<std::string, HandlerFunc> recorder_handler_map;
@@ -906,6 +909,51 @@ std::string HexToString(const unsigned char hex) {
   char hex_str[5] = {0};
   sprintf(hex_str, "0x%02x", hex);
   return hex_str;
+}
+
+int CreateTimerfd() {
+  int timerfd =
+      ::timerfd_create(CLOCK_REALTIME, /*TFD_NONBLOCK |*/ TFD_CLOEXEC);
+  if (timerfd < 0) {
+    LOG_ERROR("Failed in timerfd_create");
+  }
+  return timerfd;
+}
+
+struct timespec HowMuchTimeFromNow(Timestamp when) {
+  int64_t nanoseconds =
+      when.NanoSecondsSinceEpoch() - Timestamp::Now().NanoSecondsSinceEpoch();
+  if (nanoseconds < 100) {
+    nanoseconds = 100;
+  }
+  struct timespec ts;
+  ts.tv_sec =
+      static_cast<time_t>(nanoseconds / Timestamp::NANO_SECONDS_PER_SECOND);
+  ts.tv_nsec =
+      static_cast<long>(nanoseconds % Timestamp::NANO_SECONDS_PER_SECOND);
+  return ts;
+}
+
+void ReadTimerfd(int timerfd, Timestamp now) {
+  uint64_t howmany;
+  ssize_t n = ::read(timerfd, &howmany, sizeof howmany);
+  LOG_DEBUG("TimerQueue::handleRead() {} at {}", howmany, now.ToString());
+  if (n != sizeof howmany) {
+    LOG_ERROR("TimerQueue::handleRead() reads {} bytes instead of 8", n);
+  }
+}
+
+void ResetTimerfd(int timerfd, Timestamp expiration) {
+  // wake up loop by timerfd_settime()
+  struct itimerspec new_value;
+  struct itimerspec old_value;
+  bzero(&new_value, sizeof new_value);
+  bzero(&old_value, sizeof old_value);
+  new_value.it_value = HowMuchTimeFromNow(expiration);
+  int ret = ::timerfd_settime(timerfd, 0, &new_value, &old_value);
+  if (ret) {
+    LOG_ERROR("timerfd_settime()");
+  }
 }
 
 } // namespace msgbag

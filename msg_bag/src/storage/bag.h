@@ -1,6 +1,6 @@
 #pragma once
 #include "common/msgbag_types.h"
-#include "common/time.h"
+#include "common/timestamp.h"
 #include <fstream>
 #include <string>
 
@@ -9,7 +9,7 @@ namespace msgbag {
 
 struct MsgRecord {
   std::string topic_;
-  Time arrived_time;
+  Timestamp arrived_time;
   MsgbagBuffer serialized_msg;
   size_t msg_size_;
 };
@@ -22,6 +22,7 @@ const static std::string VERSION = "1.0";
 class Bag {
   friend class Recorder;
   friend class Player;
+  friend class View;
 
 public:
   Bag();
@@ -43,6 +44,8 @@ public:
   uint32_t getMinorVersion() const {
     return version_ % 100;
   } //!< Get the minor-version of the open bag file
+
+  BagMode GetMode() const { return mode_; }
 
 private:
   void Init();
@@ -76,6 +79,8 @@ private:
   long long start_timestamp_;
   long long end_timestamp_;
   uint32_t msg_count_;
+
+  BagRecordsType records_;
 
   ////////以下待处理
   // mutable ChunkedFile file_;

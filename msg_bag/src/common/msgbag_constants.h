@@ -3,10 +3,8 @@
 
 #include <string>
 
-namespace nullmax
-{
-namespace msgbag
-{
+namespace nullmax {
+namespace msgbag {
 
 const static unsigned char FILE_HEADER = 0x01;
 
