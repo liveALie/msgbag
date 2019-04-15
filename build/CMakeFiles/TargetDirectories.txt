@@ -1,6 +1,0 @@
-/home/scding/code/msgbag/build/CMakeFiles/rebuild_cache.dir
-/home/scding/code/msgbag/build/CMakeFiles/record.dir
-/home/scding/code/msgbag/build/CMakeFiles/edit_cache.dir
-/home/scding/code/msgbag/build/src/test/CMakeFiles/rebuild_cache.dir
-/home/scding/code/msgbag/build/src/test/CMakeFiles/test.dir
-/home/scding/code/msgbag/build/src/test/CMakeFiles/edit_cache.dir

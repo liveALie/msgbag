@@ -1,1 +1,0 @@
-/usr/bin/c++  -O3 -DNDEBUG  -rdynamic CMakeFiles/record.dir/src/record/record.cpp.o CMakeFiles/record.dir/src/record/recorder.cpp.o  -o ../tools/record -lprotobuf 

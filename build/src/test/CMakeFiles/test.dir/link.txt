@@ -1,1 +1,0 @@
-/usr/bin/c++  -O3 -DNDEBUG  -rdynamic CMakeFiles/test.dir/main.cpp.o  -o ../../../tools/test  -L/home/scding/code/googletest/googletest/mybuild/lib -Wl,-rpath,/home/scding/code/googletest/googletest/mybuild/lib -lgtest 
